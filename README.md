@@ -4,7 +4,7 @@
 
 ## C/C++ 语言特性和实现原理
 
-指针、引用、数组、内存
+[指针、引用、数组、内存](note/c_cpp/pointer.md)
 
 引用与指针区别
 
@@ -52,7 +52,7 @@ http服务器项目
 
 这里推荐两个做为参考：
 
-https://github.com/imarvinle/WebServer：编程指北写的
+https://github.com/imarvinle/WebServer ：编程指北写的
 
 https://github.com/linyacool/WebServer ：这是牛客 linya 大佬写的
 
