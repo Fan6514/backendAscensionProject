@@ -56,6 +56,8 @@ https://github.com/imarvinle/WebServer ：编程指北写的
 
 https://github.com/linyacool/WebServer ：这是牛客 linya 大佬写的
 
+https://github.com/qinguoyi/TinyWebServer ：轻量级Linux下Web服务器
+
 网络库（one loop per thread + thread pool 模式）
 
 RPC
@@ -71,6 +73,8 @@ RPC
 IO与文件系统
 
 设备管理
+
+[线程库的实现](note/os/threadpool.md)
 
 # Linux私房菜
 
