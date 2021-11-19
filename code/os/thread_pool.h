@@ -42,13 +42,21 @@ do\
         printf(str);\
     }\
 }while(0)
+
+#define CHECK_POINT(ptr)\
+do\
+{\
+    if (NULL == ptr)\
+    {\
+        return MEM_ERROR;\
+    }\
+}while(0)
 /*--------------------------------------------------*/
 /* 数据结构 
 */
 /*--------------------------------------------------*/
 typedef struct Task
 {
-    int taskID;
     void (*function)(void* arg);
     void* arg;
 }Task;
@@ -64,9 +72,11 @@ typedef struct ThreadPool
     pthread_t managerID;        /* 管理者线程id */
     pthread_t *workIDs;         /* 工作线程id */
     int poolSize;               /* 线程池大小 */
+    int liveNum;                /* 存活线程数量 */
 
     pthread_mutex_t mutexPool;  /* 线程池锁 */
     pthread_cond_t condPool;
+    pthread_cond_t notEmpty;    /* 任务队列非空 */
 }ThreadPool;
 
 /*--------------------------------------------------*/
@@ -78,7 +88,7 @@ int threadPoolCreate(ThreadPool *pThreadPool, int taskCapacity, int poolSize);
 /* 销毁线程池 */
 int threadPoolDestory(ThreadPool *pThreadPool);
 /* 添加任务到线程池 */
-int threadPoolAddTask(ThreadPool *pThreadPool, Task task);
+int threadPoolAddTask(ThreadPool *pThreadPool, void(*func)(void*), void *arg);
 
 /* 管理线程库函数 */
 void manager(void* arg);
