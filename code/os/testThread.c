@@ -8,20 +8,14 @@ void taskFunc(void* arg)
     int num = *(int*)arg;
     printf("thread %ld is working, number = %d\n",
         pthread_self(), num);
-    sleep(1);
+    sleep(10);
 }
 
 int main()
 {
-    int ret = 0;
     ThreadPool *pThreadPool = NULL;
 
-    ret = threadPoolCreate(pThreadPool, 3, 10, 100);
-    if (ret == 0)
-    {
-        printf("threadPoolCreate success.\n");
-    }
-
+    pThreadPool = threadPoolCreate(1, 1, 1);
     for (int i = 0; i < 100; ++i)
     {
         int* num = (int*)malloc(sizeof(int));
@@ -29,12 +23,6 @@ int main()
         threadPoolAddTask(pThreadPool, taskFunc, num);
     }
 
-    sleep(10);
-
-    ret = threadPoolDestroy(pThreadPool);
-    if (ret == 0)
-    {
-        printf("threadPoolDestroy success.\n");
-    }
+    sleep(30);
     return 0;
 }

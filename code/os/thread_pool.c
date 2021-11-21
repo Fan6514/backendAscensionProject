@@ -1,9 +1,10 @@
 #include <unistd.h>
 #include "thread_pool.h"
 
-int threadPoolCreate(ThreadPool *pThreadPool, int taskCapacity, int poolSize, int poolMinSize)
+ThreadPool * threadPoolCreate(int taskCapacity, int poolSize, int poolMinSize)
 {
     int ret = 0;
+    ThreadPool *pThreadPool = NULL;
 
     /* 初始化线程池 */
     GET_MEMORY(pThreadPool, ThreadPool, sizeof(ThreadPool), error);
@@ -13,6 +14,7 @@ int threadPoolCreate(ThreadPool *pThreadPool, int taskCapacity, int poolSize, in
     pThreadPool->liveNum = poolMinSize;
     pThreadPool->busyNum = 0;
     pThreadPool->exitNum = 0;
+    pThreadPool->isShutDown = false;
 
     /* 初始化任务队列 */
     GET_MEMORY(pThreadPool->taskList, Task, sizeof(Task)*taskCapacity, error);
@@ -41,13 +43,13 @@ int threadPoolCreate(ThreadPool *pThreadPool, int taskCapacity, int poolSize, in
         CHECK_RETURN(ret, SUCCESS, "pthread_create error.\n");
     }
 
-    return SUCCESS;
+    return pThreadPool;
 
 error:
     REL_MEMORY(pThreadPool);
     REL_MEMORY(pThreadPool->workIDs);
     REL_MEMORY(pThreadPool->taskList);
-    return MEM_ERROR;
+    return NULL;
 }
 
 int threadPoolDestroy(ThreadPool *pThreadPool)
@@ -91,7 +93,7 @@ int threadPoolAddTask(ThreadPool *pThreadPool, void(*func)(void*), void *arg)
 
     pthread_mutex_lock(&pThreadPool->mutexPool);
     /* 如果任务队列已满，则阻塞生产者线程 */
-    while (pThreadPool->poolSize == pThreadPool->taskCapacity && !pThreadPool->isShutDown)
+    while (pThreadPool->taskSize == pThreadPool->taskCapacity && !pThreadPool->isShutDown)
     {
         pthread_cond_wait(&pThreadPool->notFull, &pThreadPool->mutexPool);
     }
@@ -156,6 +158,7 @@ void *work(void* arg)
         pThreadPool->taskFront = (pThreadPool->taskFront + 1) % pThreadPool->taskCapacity;
         pThreadPool->taskSize--;
 
+        pthread_cond_signal(&pThreadPool->notFull);
         pthread_mutex_unlock(&pThreadPool->mutexPool);
         /* 处理忙线程数量，开始任务 */
         pthread_mutex_lock(&pThreadPool->mutexBusy);
@@ -243,7 +246,7 @@ void threadExit(ThreadPool *pThreadPool)
     CHECK_POINT_NORTN(pThreadPool);
 
     tid = pthread_self();
-    for (int i = 0; i < pThreadPool->taskCapacity; ++i)
+    for (int i = 0; i < pThreadPool->poolSize; ++i)
     {
         if (pThreadPool->workIDs[i] == tid)
         {
