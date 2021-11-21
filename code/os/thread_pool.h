@@ -17,6 +17,16 @@
 
 #define PROCESS_THREAD_NUM   10
 
+typedef enum thread_state
+{
+    RUNNING = 0,    /* 运行状态，可以添加任务并执行 */
+    SHUTDOWN,       /* 关闭状态，不接受新任务提交，可以继续处理任务队列中的任务 */
+    STOP,           /* 停止状态，不接受新任务提交，并中断正在处理的任务 */
+    REALLOCATION,   /* 需要增加线程池的线程 */
+    DELETE          /* 需要释放线程池的线程 */
+}THREAD_STATE;
+
+
 /* Define a Boolean data type. (from linux kernel 2.6.0) */
 typedef enum { false, true } __attribute__ ((packed)) boolean;
 
@@ -89,6 +99,7 @@ typedef struct ThreadPool
 
     pthread_t managerID;        /* 管理者线程id */
     pthread_t *workIDs;         /* 工作线程id */
+    THREAD_STATE poolState;     /* 线程池状态 */
     int poolSize;               /* 线程池大小 */
     int liveNum;                /* 存活线程数量 */
     int minNum;                 /* 线程最小数量 */
@@ -100,8 +111,6 @@ typedef struct ThreadPool
     pthread_cond_t condPool;
     pthread_cond_t notEmpty;    /* 任务队列非空 */
     pthread_cond_t notFull;     /* 任务队列非满 */
-
-    boolean isShutDown;         /* 线程池关闭标志 */
 }ThreadPool;
 
 /*--------------------------------------------------*/
@@ -119,11 +128,19 @@ ThreadPool * threadPoolCreate(int taskCapacity, int poolSize, int poolMinSize);
 int threadPoolDestroy(ThreadPool *pThreadPool);
 /* 添加任务到线程池 */
 int threadPoolAddTask(ThreadPool *pThreadPool, void(*func)(void*), void *arg);
+/* 获取当前线程池工作线程数量 */
+int threadPoolBusyNum(ThreadPool *pThreadPool);
+/* 获取当前线程池线程数量 */
+int threadPoolLiveNum(ThreadPool *pThreadPool);
 
 /* 管理线程库函数 */
 void *manager(void* arg);
 void *work(void* arg);
 
+/* 获取当前运行状态 */
+THREAD_STATE getCurrentState(ThreadPool *pThreadPool);
+void addThread(ThreadPool *pThreadPool);
+void delThread(ThreadPool *pThreadPool);
 /* 线程退出 */
 void threadExit(ThreadPool *pThreadPool);
 

@@ -14,7 +14,7 @@ ThreadPool * threadPoolCreate(int taskCapacity, int poolSize, int poolMinSize)
     pThreadPool->liveNum = poolMinSize;
     pThreadPool->busyNum = 0;
     pThreadPool->exitNum = 0;
-    pThreadPool->isShutDown = false;
+    pThreadPool->poolState = RUNNING;
 
     /* 初始化任务队列 */
     GET_MEMORY(pThreadPool->taskList, Task, sizeof(Task)*taskCapacity, error);
@@ -59,7 +59,7 @@ int threadPoolDestroy(ThreadPool *pThreadPool)
     CHECK_POINT(pThreadPool);
 
     /* 关闭线程池 */
-    pThreadPool->isShutDown = true;
+    pThreadPool->poolState = STOP;
 
     /* 阻塞管理线程 */
     pthread_join(pThreadPool->managerID, NULL);
@@ -93,13 +93,14 @@ int threadPoolAddTask(ThreadPool *pThreadPool, void(*func)(void*), void *arg)
 
     pthread_mutex_lock(&pThreadPool->mutexPool);
     /* 如果任务队列已满，则阻塞生产者线程 */
-    while (pThreadPool->taskSize == pThreadPool->taskCapacity && !pThreadPool->isShutDown)
+    while (pThreadPool->taskSize == pThreadPool->taskCapacity 
+            && RUNNING == pThreadPool->poolState)
     {
         pthread_cond_wait(&pThreadPool->notFull, &pThreadPool->mutexPool);
     }
 
     /* 如果线程池关闭则退出 */
-    if(pThreadPool->isShutDown)
+    if(RUNNING != pThreadPool->poolState)
     {
         pthread_mutex_unlock(&pThreadPool->mutexPool);
         return SUCCESS;
@@ -116,6 +117,26 @@ int threadPoolAddTask(ThreadPool *pThreadPool, void(*func)(void*), void *arg)
     return SUCCESS;
 }
 
+int threadPoolBusyNum(ThreadPool *pThreadPool)
+{
+    int busyNum = 0;
+    pthread_mutex_lock(&pThreadPool->mutexPool);
+    busyNum = pThreadPool->busyNum;
+    pthread_mutex_unlock(&pThreadPool->mutexPool);
+
+    return busyNum;
+}
+
+int threadPoolLiveNum(ThreadPool *pThreadPool)
+{
+    int liveNum = 0;
+    pthread_mutex_lock(&pThreadPool->mutexPool);
+    liveNum = pThreadPool->liveNum;
+    pthread_mutex_unlock(&pThreadPool->mutexPool);
+    
+    return liveNum;
+}
+
 void *work(void* arg)
 {
     int ret = 0;
@@ -128,7 +149,7 @@ void *work(void* arg)
         pthread_mutex_lock(&pThreadPool->mutexPool);
 
         /* 任务队列为空，阻塞消费者线程 */
-        while (pThreadPool->taskSize == 0 && !pThreadPool->isShutDown)
+        while (pThreadPool->taskSize == 0 && RUNNING == pThreadPool->poolState)
         {
             pthread_cond_wait(&pThreadPool->notEmpty, &pThreadPool->mutexPool);
 
@@ -146,7 +167,7 @@ void *work(void* arg)
         }
 
         /* 需要关闭线程池 */
-        if (pThreadPool->isShutDown)
+        if (STOP == pThreadPool->poolState)
         {
             pthread_mutex_unlock(&pThreadPool->mutexPool);
             threadExit(pThreadPool);
@@ -178,64 +199,94 @@ void *work(void* arg)
 
 void *manager(void *arg)
 {
-    int taskSize = 0;
-    int liveNum = 0;
-    int busyNum = 0;
-    int count = 0;
-    int ret = 0;
+    THREAD_STATE state;
     ThreadPool *pThreadPool = NULL;
 
     pThreadPool = (ThreadPool*)arg;
-    while (!pThreadPool->isShutDown)
+    while (RUNNING == pThreadPool->poolState)
     {
         /* 每3s检测一次 */
         sleep(3);
 
-        pthread_mutex_lock(&pThreadPool->mutexPool);
-        taskSize = pThreadPool->taskSize;
-        liveNum = pThreadPool->liveNum;
-        pthread_mutex_unlock(&pThreadPool->mutexPool);
-
-        pthread_mutex_lock(&pThreadPool->mutexBusy);
-        busyNum = pThreadPool->busyNum;
-        pthread_mutex_unlock(&pThreadPool->mutexBusy);
-
-        /* 添加线程 - 任务的个数 > 存活的线程个数 && 存活的线程数 < 最大线程数 */
-        if (taskSize > liveNum && liveNum < pThreadPool->poolSize)
+        /* 任务调度 */
+        state = getCurrentState(pThreadPool);
+        switch(state)
         {
-            pthread_mutex_lock(&pThreadPool->mutexPool);
-
-            count = 0;
-            for (int i = 0; i < pThreadPool->poolSize && count < PROCESS_THREAD_NUM
-                && pThreadPool->liveNum < pThreadPool->poolSize; ++i)
-            {
-                if (pThreadPool->workIDs[i] == 0)
-                {
-                    ret = pthread_create(&pThreadPool->workIDs[i], NULL, work, pThreadPool);
-                    CHECK_RETURN(ret, SUCCESS, "pthread_create error.\n");
-                    count++;
-                    pThreadPool->liveNum++;
-                }
-            }
-
-            pthread_mutex_unlock(&pThreadPool->mutexPool);
-        }
-
-        /* 销毁线程 - 忙的线程*2 < 存活的线程数 && 存活的线程 > 最小线程数 */
-        if (busyNum*2 < liveNum && liveNum > pThreadPool->minNum)
-        {
-            pthread_mutex_lock(&pThreadPool->mutexPool);
-            pThreadPool->exitNum = PROCESS_THREAD_NUM;
-            pthread_mutex_unlock(&pThreadPool->mutexPool);
-
-            /* 唤醒线程，让线程自己结束 */
-            for (int i = 0; i < PROCESS_THREAD_NUM; ++i)
-            {
-                pthread_cond_signal(&pThreadPool->notEmpty);
-            }
+            case REALLOCATION:
+                addThread(pThreadPool);
+                break;
+            case DELETE:
+                delThread(pThreadPool);
+                break;
+            default:
+                break;
         }
     }
     return NULL;
+}
+
+void addThread(ThreadPool *pThreadPool)
+{
+    int count = 0;
+    int ret = 0;
+    pthread_mutex_lock(&pThreadPool->mutexPool);
+
+    for (int i = 0; i < pThreadPool->poolSize && count < PROCESS_THREAD_NUM
+        && pThreadPool->liveNum < pThreadPool->poolSize; ++i)
+    {
+        if (pThreadPool->workIDs[i] == 0)
+        {
+            ret = pthread_create(&pThreadPool->workIDs[i], NULL, work, pThreadPool);
+            CHECK_RETURN(ret, SUCCESS, "pthread_create error.\n");
+            count++;
+            pThreadPool->liveNum++;
+        }
+    }
+
+    pthread_mutex_unlock(&pThreadPool->mutexPool);
+}
+
+void delThread(ThreadPool *pThreadPool)
+{
+    pthread_mutex_lock(&pThreadPool->mutexPool);
+    pThreadPool->exitNum = PROCESS_THREAD_NUM;
+    pthread_mutex_unlock(&pThreadPool->mutexPool);
+
+    /* 唤醒线程，让线程自己结束 */
+    for (int i = 0; i < PROCESS_THREAD_NUM; ++i)
+    {
+        pthread_cond_signal(&pThreadPool->notEmpty);
+    }
+}
+
+THREAD_STATE getCurrentState(ThreadPool *pThreadPool)
+{
+    int taskSize = 0;
+    int liveNum = 0;
+    int busyNum = 0;
+    THREAD_STATE state;
+
+    pthread_mutex_lock(&pThreadPool->mutexPool);
+    taskSize = pThreadPool->taskSize;
+    liveNum = pThreadPool->liveNum;
+    pthread_mutex_unlock(&pThreadPool->mutexPool);
+
+    pthread_mutex_lock(&pThreadPool->mutexBusy);
+    busyNum = pThreadPool->busyNum;
+    pthread_mutex_unlock(&pThreadPool->mutexBusy);
+
+    /* 添加线程 - 任务的个数 > 存活的线程个数 && 存活的线程数 < 最大线程数 */
+    if (taskSize > liveNum && liveNum < pThreadPool->poolSize)
+    {
+        state = REALLOCATION;
+    }
+    /* 销毁线程 - 忙的线程*2 < 存活的线程数 && 存活的线程 > 最小线程数 */
+    else if (busyNum*2 < liveNum && liveNum > pThreadPool->minNum)
+    {
+        state = DELETE;
+    }
+
+    return state;
 }
 
 void threadExit(ThreadPool *pThreadPool)
