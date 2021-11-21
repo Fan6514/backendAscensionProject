@@ -116,7 +116,7 @@ typedef struct ThreadPool
 /* 建立并初始化线程池 */
 int threadPoolCreate(ThreadPool *pThreadPool, int taskCapacity, int poolSize, int poolMinSize);
 /* 销毁线程池 */
-int threadPoolDestory(ThreadPool *pThreadPool);
+int threadPoolDestroy(ThreadPool *pThreadPool);
 /* 添加任务到线程池 */
 int threadPoolAddTask(ThreadPool *pThreadPool, void(*func)(void*), void *arg);
 

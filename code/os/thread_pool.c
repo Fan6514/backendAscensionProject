@@ -50,7 +50,7 @@ error:
     return MEM_ERROR;
 }
 
-int threadPoolDestory(ThreadPool *pThreadPool)
+int threadPoolDestroy(ThreadPool *pThreadPool)
 {
     int ret = 0;
 
