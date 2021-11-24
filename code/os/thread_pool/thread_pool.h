@@ -1,9 +1,6 @@
 #ifndef _THREAD_POOL_H_
 #define _THREAD_POOL_H_
 
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <pthread.h>
 
 /*--------------------------------------------------*/

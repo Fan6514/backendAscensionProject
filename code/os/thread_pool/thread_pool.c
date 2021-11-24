@@ -1,4 +1,8 @@
 #include <unistd.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <pthread.h>
 #include "thread_pool.h"
 
 ThreadPool * threadPoolCreate(int taskCapacity, int poolSize, int poolMinSize)

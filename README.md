@@ -74,6 +74,8 @@ IO与文件系统
 
 设备管理
 
+[多线程必备技能：条件变量与互斥锁](note/os/cond.md)
+
 [线程库的实现](note/os/threadpool.md)
 
 # Linux私房菜
