@@ -1,4 +1,5 @@
 #include <sys/socket.h>
+#include <netinet/in.h>
 
 /*--------------------------------------------------*/
 /* 宏定义
@@ -9,7 +10,7 @@
 /* 数据结构 
 */
 /*--------------------------------------------------*/
-typedef httpSocket
+typedef struct httpSocket
 {
     int listenFd;
     int connFd;

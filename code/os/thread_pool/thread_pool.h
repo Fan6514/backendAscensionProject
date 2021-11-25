@@ -23,10 +23,6 @@ typedef enum thread_state
     DELETE          /* 需要释放线程池的线程 */
 }THREAD_STATE;
 
-
-/* Define a Boolean data type. (from linux kernel 2.6.0) */
-typedef enum { false, true } __attribute__ ((packed)) boolean;
-
 #define GET_MEMORY(ptr, type, size, pos)\
 do\
 {\
