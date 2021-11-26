@@ -62,3 +62,16 @@ int epollEventDel(int epoll_fd, int fd, __uint32_t events)
 
     return ret;
 }
+
+int epollWait(int epoll_fd, int *eventSum, epoll_event *epoll_events)
+{
+    int ret = SUCCESS;
+
+    CHECK_POINT(epoll_events);
+
+    eventSum = epoll_wait(epoll_fd, epoll_events, MAX_EVENT, TIME_OUT);
+    CHECK_RETURN_ERR(eventSum, -1, "epoll_wait error.\n");
+    ret = eventSum == -1 ? RTN_ERROR : SUCCESS;
+
+    return ret;
+}

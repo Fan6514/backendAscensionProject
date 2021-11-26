@@ -1,11 +1,14 @@
 #ifndef _EPOLL_H_
 #define _EPOLL_H_
 
+#include <sys/epoll.h>
+
 /*--------------------------------------------------*/
 /* 宏定义
 */
 /*--------------------------------------------------*/
 #define MAX_EVENT 1024
+#define TIME_OUT 1000
 #define DEFAULT_EPOLL_EVENTS (EPOLLIN | EPOLLET | EPOLLONESHOT)
 
 /*--------------------------------------------------*/
@@ -16,5 +19,6 @@ int epollInit();
 int epollEventAdd(int epoll_fd, int fd);
 int epollEventMod(int epoll_fd, int fd, __uint32_t events);
 int epollEventDel(int epoll_fd, int fd, __uint32_t events);
+int epollWait(int epoll_fd, epoll_event *epoll_events);
 
 #endif
