@@ -19,6 +19,6 @@ int epollInit();
 int epollEventAdd(int epoll_fd, int fd);
 int epollEventMod(int epoll_fd, int fd, __uint32_t events);
 int epollEventDel(int epoll_fd, int fd, __uint32_t events);
-int epollWait(int epoll_fd, epoll_event *epoll_events);
+int epollWait(int epoll_fd, int *eventSum, struct epoll_event *epoll_events);
 
 #endif

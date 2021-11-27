@@ -82,7 +82,7 @@ IO与文件系统
 
 # 算法与数据结构
 
-[线性表、数组、链表](note/data_structure/list.md)
+[基本数据结构：链表](note/data_structure/list.md)
 
 栈与队列
 

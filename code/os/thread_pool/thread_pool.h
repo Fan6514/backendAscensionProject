@@ -23,53 +23,6 @@ typedef enum thread_state
     DELETE          /* 需要释放线程池的线程 */
 }THREAD_STATE;
 
-#define GET_MEMORY(ptr, type, size, pos)\
-do\
-{\
-    ptr = (type*)malloc(size);\
-    if (NULL == ptr)\
-    {\
-        printf("Malloc error.\n");\
-        goto pos;\
-    }\
-    memset(ptr, 0, size);\
-}while(0)
-
-#define REL_MEMORY(ptr)\
-do\
-{\
-    if (NULL != ptr)\
-    {\
-        free(ptr);\
-    }\
-}while(0)
-
-#define CHECK_RETURN(ret, sucess, str)\
-do\
-{\
-    if (sucess != ret)\
-    {\
-        printf(str);\
-    }\
-}while(0)
-
-#define CHECK_POINT(ptr)\
-do\
-{\
-    if (NULL == ptr)\
-    {\
-        return MEM_ERROR;\
-    }\
-}while(0)
-
-#define CHECK_POINT_NORTN(ptr)\
-do\
-{\
-    if (NULL == ptr)\
-    {\
-        return;\
-    }\
-}while(0)
 /*--------------------------------------------------*/
 /* 数据结构 
  *      - 增加 minNum 属性让线程池根据任务

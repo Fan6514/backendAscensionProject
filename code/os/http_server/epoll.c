@@ -2,9 +2,9 @@
 #include <sys/epoll.h>
 
 #include "epoll.h"
-#include "common.h"
+#include "../include/common.h"
 
-epoll_event *events;
+struct epoll_event *events;
 
 int epollInit()
 {
@@ -20,7 +20,7 @@ int epollInit()
 
 int epollEventAdd(int epoll_fd, int fd)
 {
-    epoll_event event;
+    struct epoll_event event;
     int ret = SUCCESS;
 
     event.data.fd = fd;
@@ -35,7 +35,7 @@ int epollEventAdd(int epoll_fd, int fd)
 
 int epollEventMod(int epoll_fd, int fd, __uint32_t events)
 {
-    epoll_event event;
+    struct epoll_event event;
     int ret = SUCCESS;
 
     event.data.fd = fd;
@@ -50,7 +50,7 @@ int epollEventMod(int epoll_fd, int fd, __uint32_t events)
 
 int epollEventDel(int epoll_fd, int fd, __uint32_t events)
 {
-    epoll_event event;
+    struct epoll_event event;
     int ret = SUCCESS;
 
     event.data.fd = fd;
@@ -63,15 +63,16 @@ int epollEventDel(int epoll_fd, int fd, __uint32_t events)
     return ret;
 }
 
-int epollWait(int epoll_fd, int *eventSum, epoll_event *epoll_events)
+int epollWait(int epoll_fd, int *eventSum, struct epoll_event *epoll_events)
 {
     int ret = SUCCESS;
 
+    CHECK_POINT(eventSum);
     CHECK_POINT(epoll_events);
 
-    eventSum = epoll_wait(epoll_fd, epoll_events, MAX_EVENT, TIME_OUT);
+    *eventSum = epoll_wait(epoll_fd, epoll_events, MAX_EVENT, TIME_OUT);
     CHECK_RETURN_ERR(eventSum, -1, "epoll_wait error.\n");
-    ret = eventSum == -1 ? RTN_ERROR : SUCCESS;
+    ret = *eventSum == -1 ? RTN_ERROR : SUCCESS;
 
     return ret;
 }

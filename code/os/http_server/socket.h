@@ -1,3 +1,6 @@
+#ifndef _SOCKET_H_
+#define _SOCKET_H_
+
 #include <sys/socket.h>
 #include <netinet/in.h>
 
@@ -24,8 +27,10 @@ typedef struct serverSocket
 /* SOCKET 函数
 */
 /*--------------------------------------------------*/
-int socketInit(HTTP_SOCKET* http_socket, u_short *port);
-int socketBind(HTTP_SOCKET* http_socket);
-int socketListen(HTTP_SOCKET* http_socket);
-int socketAccept(HTTP_SOCKET* http_socket);
-void socketUninit(HTTP_SOCKET* http_socket);
+int socketInit(SERVER_SOCKET* http_socket, u_short port);
+int socketBind(SERVER_SOCKET* http_socket);
+int socketListen(SERVER_SOCKET* http_socket);
+int socketAccept(SERVER_SOCKET* http_socket);
+void socketUninit(SERVER_SOCKET* http_socket);
+
+#endif
