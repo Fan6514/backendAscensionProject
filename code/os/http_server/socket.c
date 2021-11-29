@@ -6,7 +6,7 @@
 #include <sys/socket.h>
 
 #include "socket.h"
-#include "../include/common.h"
+#include "../include/util.h"
 
 int socketInit(SERVER_SOCKET* http_socket, u_short port)
 {
@@ -91,3 +91,11 @@ int socketUninit(SERVER_SOCKET* http_socket)
     return ret;
 }
 
+int socketRecv(SERVER_SOCKET* http_socket)
+{
+    int ret = SUCCESS;
+
+    CHECK_POINT(http_socket);
+
+
+}

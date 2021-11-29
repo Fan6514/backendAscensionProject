@@ -4,7 +4,7 @@
 #include "epoll.h"
 #include "socket.h"
 #include "../thread_pool/thread_pool.h"
-#include "../include/common.h"
+#include "../include/util.h"
 
 extern struct epoll_event *events;
 
@@ -80,8 +80,6 @@ int httpServerRun(int port, int pollSize, int pollCoreSize)
             CHECK_RETURN(ret, SUCCESS, "threadPoolAddTask error.\n");
         }
     }
-
-    return ret;
 
 error:
     socketUninit(&server_socket);

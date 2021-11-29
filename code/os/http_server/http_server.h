@@ -4,5 +4,6 @@
 int httpServerRun(int port, int pollSize, int pollCoreSize);
 int httpServerStartUp(int port, int pollSize, int pollCoreSize, ThreadPool **ppThread_pool, 
                         int *epoll_fd, SERVER_SOCKET *server_socket);
+void httpServerRequest(void* arg);
 
 #endif
