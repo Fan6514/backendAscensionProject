@@ -31,6 +31,6 @@ int socketInit(SERVER_SOCKET* http_socket, u_short port);
 int socketBind(SERVER_SOCKET* http_socket);
 int socketListen(SERVER_SOCKET* http_socket);
 int socketAccept(SERVER_SOCKET* http_socket);
-void socketUninit(SERVER_SOCKET* http_socket);
+int socketUninit(SERVER_SOCKET* http_socket);
 
 #endif

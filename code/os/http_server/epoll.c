@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/epoll.h>
 
 #include "epoll.h"
@@ -13,7 +15,7 @@ int epollInit()
     epoll_fd = epoll_create(MAX_EVENT);
     CHECK_RETURN_ERR(epoll_fd, -1, "epoll_create error.\n");
 
-    GET_MEMORY_NORTN(events, epoll_event, sizeof(epoll_event)*MAX_EVENT);
+    GET_MEMORY_RTN(events, struct epoll_event, sizeof(struct epoll_event)*MAX_EVENT);
 
     return epoll_fd;
 }
@@ -71,7 +73,7 @@ int epollWait(int epoll_fd, int *eventSum, struct epoll_event *epoll_events)
     CHECK_POINT(epoll_events);
 
     *eventSum = epoll_wait(epoll_fd, epoll_events, MAX_EVENT, TIME_OUT);
-    CHECK_RETURN_ERR(eventSum, -1, "epoll_wait error.\n");
+    CHECK_RETURN_ERR(*eventSum, -1, "epoll_wait error.\n");
     ret = *eventSum == -1 ? RTN_ERROR : SUCCESS;
 
     return ret;

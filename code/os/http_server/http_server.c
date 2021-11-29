@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include<errno.h>
+#include <errno.h>
 
 #include "epoll.h"
 #include "socket.h"
@@ -10,7 +10,9 @@ extern struct epoll_event *events;
 
 void httpServerRequest(void* arg)
 {
+    SERVER_SOCKET *server_socket = NULL;
 
+    server_socket = (SERVER_SOCKET *)arg;
 }
 
 int httpServerStartUp(int port, int pollSize, int pollCoreSize, ThreadPool **ppThread_pool, 
@@ -19,17 +21,23 @@ int httpServerStartUp(int port, int pollSize, int pollCoreSize, ThreadPool **ppT
     int ret = SUCCESS;
 
     CHECK_POINT(ppThread_pool);
-    CHECK_POINT(*ppThread_pool);
     CHECK_POINT(epoll_fd);
     CHECK_POINT(server_socket);
 
     /* 初始化线程池 */
     *ppThread_pool = threadPoolCreate(MAX_CONNECTION, pollSize, pollCoreSize);
     CHECK_POINT(*ppThread_pool);
+    printf("[threadPool] poolSize: %d, poolCoreSize:%d\n", pollSize, pollCoreSize);
 
     /* 初始化 socket */
     ret = socketInit(server_socket, port);
     CHECK_RETURN_ERR(ret, -1, "socketInit error.\n");
+    /* bind */
+    ret = socketBind(server_socket);
+    CHECK_RETURN_ERR(ret, -1, "socketBind error.\n");
+    /* listen */
+    ret = socketListen(server_socket);
+    CHECK_RETURN_ERR(ret, -1, "socketListen error.\n");
 
     /* 初始化 epoll */
     *epoll_fd = epollInit();
@@ -64,6 +72,10 @@ int httpServerRun(int port, int pollSize, int pollCoreSize)
         
         for (int i = 0; i < eventSum; ++i)
         {
+            ret = socketAccept(&server_socket);
+            CHECK_RETURN(ret, SUCCESS, "socketAccept error.\n");
+            printf("fd:%d link success.\n", server_socket.conn_fd);
+
             ret = threadPoolAddTask(thread_pool, httpServerRequest, (void*)&server_socket);
             CHECK_RETURN(ret, SUCCESS, "threadPoolAddTask error.\n");
         }
@@ -74,4 +86,10 @@ int httpServerRun(int port, int pollSize, int pollCoreSize)
 error:
     socketUninit(&server_socket);
     return ret;
+}
+
+int main()
+{
+    httpServerRun(8000, 100, 50);
+    return 0;
 }

@@ -36,6 +36,7 @@ int socketInit(SERVER_SOCKET* http_socket, u_short port)
     http_socket->serverAddr.sin_family = AF_INET;
     http_socket->serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
     http_socket->serverAddr.sin_port = htons(port);
+    http_socket->clientLen = sizeof(struct sockaddr_in);
 
     return ret;
 }
@@ -70,19 +71,23 @@ int socketAccept(SERVER_SOCKET* http_socket)
     CHECK_POINT(http_socket);
 
     http_socket->conn_fd = accept(http_socket->listen_fd, (struct sockaddr*)&http_socket->clientAddr, 
-                                    sizeof(http_socket->clientAddr));
+                                    &http_socket->clientLen);
     CHECK_RETURN_ERR(http_socket->conn_fd, -1, "listen error.\n");
     
     return http_socket->conn_fd == -1 ? -1 : SUCCESS;
 }
 
-void socketUninit(SERVER_SOCKET* http_socket)
+int socketUninit(SERVER_SOCKET* http_socket)
 {
+    int ret = SUCCESS;
+
     CHECK_POINT(http_socket);
 
     close(http_socket->listen_fd);
     close(http_socket->conn_fd);
 
     memset(http_socket, 0, sizeof(http_socket));
+
+    return ret;
 }
 
