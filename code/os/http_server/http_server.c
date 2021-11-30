@@ -11,8 +11,9 @@ extern struct epoll_event *events;
 void httpServerRequest(void* arg)
 {
     SERVER_SOCKET *server_socket = NULL;
-
+    
     server_socket = (SERVER_SOCKET *)arg;
+    socketRecv(server_socket);
 }
 
 int httpServerStartUp(int port, int pollSize, int pollCoreSize, ThreadPool **ppThread_pool, 

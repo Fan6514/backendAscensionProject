@@ -4,7 +4,7 @@
 #include <sys/epoll.h>
 
 #include "epoll.h"
-#include "../include/common.h"
+#include "../include/util.h"
 
 struct epoll_event *events;
 

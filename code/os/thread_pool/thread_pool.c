@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
-#include "../include/common.h"
+#include "../include/util.h"
 #include "thread_pool.h"
 
 ThreadPool * threadPoolCreate(int taskCapacity, int poolSize, int poolMinSize)
@@ -192,7 +192,6 @@ void *work(void* arg)
         pthread_mutex_unlock(&pThreadPool->mutexBusy);
 
         task.function(task.arg);
-        REL_MEMORY(task.arg);
 
         /* 任务结束 */
         pthread_mutex_lock(&pThreadPool->mutexBusy);
