@@ -91,14 +91,13 @@ int socketUninit(SERVER_SOCKET* http_socket)
     return ret;
 }
 
-int socketRecv(SERVER_SOCKET* http_socket)
+int socketRecv(SERVER_SOCKET* http_socket, char* buf)
 {
     int ret = SUCCESS;
-    char buf[256] = {0};
 
     CHECK_POINT(http_socket);
 
-    ret = recv(http_socket->conn_fd, buf, 256, 0);
+    ret = recv(http_socket->conn_fd, buf, MAX_BUf_LEN, 0);
     printf("%s", buf);
 
     return ret;

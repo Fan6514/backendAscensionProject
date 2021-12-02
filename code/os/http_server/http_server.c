@@ -11,9 +11,23 @@ extern struct epoll_event *events;
 void httpServerRequest(void* arg)
 {
     SERVER_SOCKET *server_socket = NULL;
+    HTTP_REQUEST_DATA http_data;
+    char *buf = NULL;
     
     server_socket = (SERVER_SOCKET *)arg;
-    socketRecv(server_socket);
+    GET_MEMORY(buf, char, MAX_BUf_LEN, finish);
+
+    socketRecv(server_socket, buf);
+    parseHttpData(buf, http_data);
+
+    switch(http_data.header.method)
+    {
+        case GET:
+            do_requestForGet();
+    }
+
+finish:
+    REL_MEMORY(buf);
 }
 
 int httpServerStartUp(int port, int pollSize, int pollCoreSize, ThreadPool **ppThread_pool, 
@@ -89,6 +103,8 @@ error:
 
 int main()
 {
+    loggerInit("httpserver");
     httpServerRun(8000, 100, 50);
+    loggerUninit();
     return 0;
 }

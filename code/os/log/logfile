@@ -1,0 +1,3 @@
+[logfile] ERROR    root - log test error
+[logfile] TRACE    root - log test debug
+[logfile] INFO     root - log test info

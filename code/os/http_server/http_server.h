@@ -28,11 +28,12 @@ typedef struct http_request_header
     boolean keep_alive;
 }HTTP_REQUEST_HEADER;
 
-typedef struct http_data
+typedef struct http_request_data
 {
     HTTP_REQUEST_HEADER header;
-    
-}HTTP_DATA;
+    /* 后续增加 body 的数据 */
+    char *body;
+}HTTP_REQUEST_DATA;
 
 /*--------------------------------------------------*/
 /* HTTP 函数
