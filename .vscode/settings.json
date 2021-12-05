@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "logger.h": "c",
+        "thread_pool.h": "c"
+    },
+    "C_Cpp.errorSquiggles": "Disabled"
+}

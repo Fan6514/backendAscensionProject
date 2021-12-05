@@ -48,7 +48,7 @@ C++11 部分新特性，比如右值引用、完美转发等
 
 IO 复用机制：epoll、select、poll（破解 C10K 问题的利器）
 
-http服务器项目
+[http服务器项目](https://github.com/Fan6514/httpServer4c)
 
 这里推荐两个做为参考：
 
@@ -82,6 +82,8 @@ IO与文件系统
 
 # 算法与数据结构
 
+[认识复杂度、对数器、二分法和异或运算](note/data_struct/base.md)
+
 [基本数据结构：链表](note/data_structure/list.md)
 
 栈与队列
@@ -96,7 +98,7 @@ B树、B+树
 
 散列函数和散列表
 
-排序算法：冒泡、插入、快速、希尔、堆排、基数、归并等
+[排序算法的实现](note/data_structure/sort.md)
 
 字符串匹配算法：KMP
 
