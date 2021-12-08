@@ -98,7 +98,7 @@ B树、B+树
 
 堆
 
-散列函数和散列表
+哈希函数和哈希表
 
 [排序算法的实现](note/data_structure/sort.md)
 
