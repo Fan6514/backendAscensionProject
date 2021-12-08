@@ -82,7 +82,9 @@ IO与文件系统
 
 # 算法与数据结构
 
-[认识复杂度、对数器、二分法和异或运算](note/data_structure/base.md)
+[认识复杂度、对数器和异或运算](note/data_structure/base.md)
+
+[认识二分法](note/data_structure/binary.md)
 
 [基本数据结构：链表](note/data_structure/list.md)
 
