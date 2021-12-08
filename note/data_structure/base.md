@@ -122,3 +122,7 @@ void findOddTimesNum2(int arr[], int length)
      result[1] = eor ^ onlyOne;
 }
 ```
+
+### 二进制中1的个数
+
+思路：我们已经学到怎么提取最右侧的1，在找到最右侧的1之后，count++，然后用提取出的数异或原数，即可将该位的1置为0，直到原来的数都置为0，就找到了1的个数。
