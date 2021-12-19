@@ -8,7 +8,7 @@
 
 引用与指针区别
 
-C 和 C++ 的一些区别，比如 new、delete 和 malloc、free 的区别
+[C/C++ 内存管理](note/c_cpp/memory.md)
 
 虚机制：虚函数、虚函数表、纯虚函数
 
@@ -78,7 +78,9 @@ IO与文件系统
 
 [线程库的实现](note/os/threadpool.md)
 
-# Linux私房菜
+# Linux
+
+[Linux内核源码学习之进程管理](note/linux/Linux内核源码学习.md)
 
 # 算法与数据结构
 
@@ -88,7 +90,7 @@ IO与文件系统
 
 [基本数据结构：链表](note/data_structure/list.md)
 
-栈与队列
+[栈与队列](note/data_structure/stack_queue.md)
 
 树、二叉树、多叉树实现和遍历方式，AVL树实现以及插入删除过程、红黑树（了解定义即可）
 
