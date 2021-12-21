@@ -78,7 +78,7 @@ Linux 下的 IO 栈致大致有三个层次：
 - **块层**，管理块设备的 IO 队列，对 IO 请求进行合并、排序。
 - **设备层**，通过 DMA 与内存直接交互，完成数据和具体设备之间的交互。
 
-![linuxio](linuxio.jpg)
+![linuxio](/note/linux/pics/linuxio.jpg)
 
 传统的 Buffered IO 使用 read 读取文件的过程：读一个冷文件（Cache 中不存在），open 打开文件内核后建立了一系列的数据结构，接下来调用 read，到达文件系统这一层，发现 **Page Cache** 中不存在该位置的磁盘映射，然后创建相应的 Page Cache 并和相关的扇区关联。然后请求继续到达块设备层，在 IO 队列里排队，接受一系列的调度后到达设备驱动层，此时一般使用 DMA 方式读取相应的磁盘扇区到 Cache 中，然后 read 拷贝数据到用户提供的用户态 buffer 中去（read 的参数指出的）。
 
@@ -90,7 +90,7 @@ Linux 下的 IO 栈致大致有三个层次：
 
 ## I/O Buffering
 
-![bufferio](bufferio.jpg)
+![bufferio](/note/linux/pics/bufferio.jpg)
 
 如图，当程序调用各类文件操作函数后，用户数据（User Data）到达磁盘（Disk）的流程如图所示。图中描述了 Linux 下文件操作函数的层级关系和内存缓存层的存在位置。中间的黑色实线是用户态和内核态的分界线。
 
