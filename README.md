@@ -81,6 +81,7 @@ IO与文件系统
 # Linux
 
 [Linux内核源码学习之进程管理](note/linux/Linux内核源码学习.md)
+[LinuxI/O系统](note/linux/io.md)
 
 # 算法与数据结构
 
