@@ -29,7 +29,7 @@
 
 **2.3 项目实践**
 
--     :bulb:  [http服务器项目](https://github.com/Fan6514/httpServer4c)
+-   [:bulb:http服务器项目](https://github.com/Fan6514/httpServer4c)
 
 这里推荐两个做为参考：
 
