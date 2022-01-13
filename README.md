@@ -1,5 +1,4 @@
  <h1 align="center">&#x1F4DC 程序员后端技术栈精进计划 </h1>
-
 >    一切伟大的行动和思想，都有一个微不足道的开始。 
 
 这里分享一些看过的文章并且总结起来，让平时碎片化学习的知识体系化，以便之后可以反复学习。  
@@ -8,8 +7,9 @@
 
 **1.1 指针与内存**
 
--   [深入理解指针](note/c_cpp/pointer.md)
--   [内存管理](note/c_cpp/memory.md)
+-   [指针使用必知必会](note/c_cpp/pointer.md)
+-   [预处理器使用指南](note/c_cpp/include.md)
+-   [C/C++ 内存管理](note/c_cpp/memory.md)
 
 ## 二、:fire:  网络编程篇
 
