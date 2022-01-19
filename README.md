@@ -9,6 +9,7 @@
 
 -   [指针使用必知必会](note/c_cpp/pointer.md)
 -   [预处理器使用指南](note/c_cpp/include.md)
+-   [深入理解链接器](note/c_cpp/linker.md)
 -   [C/C++ 内存管理](note/c_cpp/memory.md)
 
 ## 二、:fire:  网络编程篇
@@ -52,7 +53,7 @@ https://github.com/qinguoyi/TinyWebServer ：轻量级Linux下Web服务器
 -   进程与线程管理
 -   [Linux内核源码学习之进程管理](note/linux/Linux内核源码学习.md)
 -   [多线程必备技能：条件变量与互斥锁](note/os/cond.md)
--   [线程库的实现](note/os/threadpool.md)
+-   [高并发中的线程与线程库的实现](note/os/threadpool.md)
 
 **3.2 内存管理**
 
