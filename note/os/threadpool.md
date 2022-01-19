@@ -37,7 +37,7 @@ struct *** {
 
 **线程**的概念就是将一个进程中产生多个入口函数， 原本**属于同一个进程中的机器指令可以被多个CPU同时执行**。
 
-![](D:\study\backendAscensionProject\note\os\pics\thread1.png)
+![](/note/os/pics/thread1.png)
 
 ### 线程池实现
 
