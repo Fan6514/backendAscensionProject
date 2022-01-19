@@ -59,7 +59,7 @@
 
 有了符号表，编译生成的目标函数就由以下三部分构成：
 
-![](backendAscensionProject\note\c_cpp\pics\objectfile.png)
+![](/note/c_cpp/pics/objectfile.png)
 
 有了符号表，链接器就可以进行符号决议了。 
 
@@ -77,11 +77,11 @@
 
 假设 math.c 的数字计算程序，其中定义了一个 add 函数，该函数在 main.c 中被引用到。 我们只需要在 main.c 中 include 写好的 math.h 头文件就可以使用add函数了，如图所示：
 
-![](note/c_cpp/pics/reference.png)
+![](/note/c_cpp/pics/reference.png)
 
 将这里 math.c 文件中的代码注释掉之后再重新编译，就会出现 undefined reference to 'add(int, int)' 错误，如图所示： 
 
-![](\note\c_cpp\pics\undefine.png)
+![](/note/c_cpp/pics/undefine.png)
 
 该错误产生的过程如下：
 
