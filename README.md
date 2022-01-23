@@ -1,7 +1,7 @@
  <h1 align="center">&#x1F4DC 程序员后端技术栈精进计划 </h1>
 > 一切伟大的行动和思想，都有一个微不足道的开始。 
 
-这里分享一些看过的文章并且总结起来，让平时碎片化学习的知识体系化，以便之后可以反复学习。  
+这里分享一些看过的文章并且总结起来，让平时碎片化学习的知识体系化，以便之后可以反复学习。
 
 ## 一、:fire: 语言基础篇
 
@@ -11,6 +11,10 @@
 -   [预处理器使用指南](note/c_cpp/include.md)
 -   [深入理解链接器](note/c_cpp/linker.md)
 -   [C/C++ 内存管理](note/c_cpp/memory.md)
+
+**1.2 编程规范**
+
+-   [结构体内存的自然对齐](note/c_cpp/struct_memory.md)
 
 ## 二、:fire:  网络编程篇
 
@@ -31,14 +35,6 @@
 **2.3 项目实践**
 
 -   [:bulb:http服务器项目](https://github.com/Fan6514/httpServer4c)
-
-这里推荐两个做为参考：
-
-https://github.com/imarvinle/WebServer ：编程指北写的
-
-https://github.com/linyacool/WebServer ：这是牛客 linya 大佬写的
-
-https://github.com/qinguoyi/TinyWebServer ：轻量级Linux下Web服务器
 
 -   网络库（one loop per thread + thread pool 模式）
 
@@ -61,7 +57,7 @@ https://github.com/qinguoyi/TinyWebServer ：轻量级Linux下Web服务器
 
 **3.3 文件I/O系统**
 
--   [LinuxI/O系统](note/linux/io.md)
+-   [程序 I/O 操作详解](note/linux/io.md)
 
 ## 四、:fire: 算法篇
 
