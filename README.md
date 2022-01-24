@@ -16,6 +16,10 @@
 
 -   [结构体内存的自然对齐](note/c_cpp/struct_memory.md)
 
+**1.3 面向对象编程**
+
+-   [多线程下的析构函数](note/c_cpp/destructor.md)
+
 ## 二、:fire:  网络编程篇
 
 **2.1 计算机网络基础**
