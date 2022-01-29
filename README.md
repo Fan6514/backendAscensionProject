@@ -34,7 +34,7 @@
 
 -   高性能 IO 两种模式：Reactor 和 Proactor
 
--   IO 复用机制：epoll、select、poll（破解 C10K 问题的利器）
+-   [IO 多路复用机制](note/net/epoll.md)
 
 **2.3 项目实践**
 
