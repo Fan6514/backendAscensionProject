@@ -10,7 +10,7 @@
 -   [指针使用必知必会](note/c_cpp/pointer.md)
 -   [预处理器使用指南](note/c_cpp/include.md)
 -   [深入理解链接器](note/c_cpp/linker.md)
--   [C/C++ 内存管理](note/c_cpp/memory.md)
+-   [什么是内存](note/c_cpp/memory.md)
 
 **1.2 编程规范**
 

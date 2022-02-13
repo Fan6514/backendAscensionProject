@@ -142,6 +142,55 @@ Level Triggered，水平触发。 该模式是 epoll 的缺省工作模式，其
 
 Nginx 默认采用的就是ET（边缘触发）。
 
+```c
+#define MAX_EVENT 1024
+#define TIME_OUT 1000
+#define DEFAULT_EPOLL_EVENTS (EPOLLIN | EPOLLET)	// ET模式
+
+// 初始化 epoll 句柄
+int epollInit()
+{
+    int epoll_fd = 0;
+
+    epoll_fd = epoll_create(MAX_EVENT);
+    CHECK_RETURN_ERR(epoll_fd, -1, "epoll_create error.");
+
+    GET_MEMORY_RTN(events, struct epoll_event, sizeof(struct epoll_event)*MAX_EVENT);
+
+    return epoll_fd;
+}
+
+// 添加事件
+int epollEventAdd(int epoll_fd, int fd)
+{
+    struct epoll_event event;
+    int ret = SUCCESS;
+
+    event.data.fd = fd;
+    event.events = DEFAULT_EPOLL_EVENTS;
+
+    /* 将 fd 绑定到 epoll_fd */
+    ret = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fd, &event);
+    CHECK_RETURN_ERR(epoll_fd, -1, "epoll_ctl error.");
+
+    return ret;
+}
+
+int epollWait(int epoll_fd, int *eventSum, struct epoll_event *epoll_events)
+{
+    int ret = SUCCESS;
+
+    CHECK_POINT(eventSum);
+    CHECK_POINT(epoll_events);
+
+    *eventSum = epoll_wait(epoll_fd, epoll_events, MAX_EVENT, TIME_OUT);
+    CHECK_RETURN_ERR(*eventSum, -1, "epoll_wait error.");
+    ret = *eventSum == -1 ? RTN_ERROR : SUCCESS;
+
+    return ret;
+}
+```
+
 ### epoll 高性能探讨
 
 epoll的高效性主要体现在以下三个方面：
@@ -161,4 +210,85 @@ epoll的高效性主要体现在以下三个方面：
 如果 list 链表中有数据，则返回这个链表中的所有元素；如果 list 链表中没有数据，则 sleep 然后等到 timeout 超时返回。所以，epoll_wait 非常高效，而且，通常情况下，即使我们需要监控百万计的 fd，但大多数情况下，一次也只返回少量准备就绪的 fd 而已。因此，每次调用 epoll_wait，其仅需要从内核态复制少量的 fd 到用户空间而已。
 
 那么，这个准备就绪的list 链表是怎么维护的呢？过程如下：当我们执行 epoll_ctl 时，除了把 fd 放入到 epoll 文件系统里 file 对象对应的红黑树之外，还会给内核中断处理程序注册一个回调函数，其告诉内核，如果这个 fd 的中断到了，就把它放到准备就绪的 list 链表中。
+
+### Linux epoll 的实现机制
+
+![](/note/net/pics/epoll.webp)
+
+Linux poll 实现的逻辑如下：
+
+1. 创建epoll句柄，初始化相关数据结构
+2. 为epoll句柄添加文件句柄，注册睡眠entry的回调
+3. 事件发生，唤醒相关文件句柄睡眠队列的entry，调用其回调
+4. 唤醒epoll睡眠队列的task，搜集并上报数据
+
+**创建epoll句柄，初始化相关数据结构**
+
+主要就是创建一个 epoll 文件描述符，注意，后面操作 epoll 的时候，就是用这个 epoll 的文件描述符来操作的，所以这就是 epoll 的句柄，精简过后的 epoll 结构如下：
+
+```c
+ struct eventpoll {
+ 	// 阻塞在epoll_wait的task的睡眠队列
+ 	wait_queue_head_t wq;
+ 	// 存在就绪文件句柄的list，该list上的文件句柄事件将会全部上报给应用
+ 	struct list_head rdllist;
+ 	// 存放加入到此epoll句柄的文件句柄的红黑树容器
+ 	struct rb_root rbr;
+ 	// 该epoll结构对应的文件句柄，应用通过它来操作该epoll结构
+ 	struct file *file;
+};
+```
+
+**为 epoll 句柄添加文件句柄，注册睡眠 entry 的回调**
+
+**添加文件句柄**：将一个文件句柄，比如 socket 添加到 epoll 的 rbr 红黑树容器中，注意，这里的文件句柄最终也是一个包装结构，和 epoll 的结构体类似：
+
+```c
+struct epitem {
+    // 该字段链接入epoll句柄的红黑树容器
+    struct rb_node rbn;
+    // 当该文件句柄有事件发生时，该字段链接入“就绪链表”，准备上报给用户态
+    struct list_head rdllink;
+    // 该字段封装实际的文件，我已经将其展开
+    struct epoll_filefd {
+        struct file *file;
+        int fd;
+    } ffd;
+    // 反向指向其所属的epoll句柄
+    struct eventpoll *ep;
+};
+```
+
+以上结构将被添加到epoll的rbr容器中的逻辑如下：
+
+```c
+struct eventpoll *ep = 待加入文件句柄所属的epoll句柄;
+struct file *tfile = 待加入的文件句柄file结构体;
+int fd = 待加入的文件描述符ID;
+
+struct epitem *epi = kmem_cache_alloc(epi_cache, GFP_KERNEL);
+INIT_LIST_HEAD(&epi->rdllink);
+INIT_LIST_HEAD(&epi->fllink);
+INIT_LIST_HEAD(&epi->pwqlist);
+epi->ep = ep;
+ep_set_ffd(&epi->ffd, tfile, fd);
+...
+ep_rbtree_insert(ep, epi);
+```
+
+**注册睡眠 entry 回调并 poll 文件句柄**：Linux 内核的 sleep/wakeup 机制非常重要，几乎贯穿了所有的内核子系统，值得注意的是，这里的 sleep/wakeup 依然采用了 OO 的思想，并没有限制睡眠的 entry 一定要是一个 task，而是将睡眠的 entry 做了一层抽象，即：
+
+```c
+struct __wait_queue {
+    unsigned int flags;
+    // 至于这个private到底是什么，内核并不限制，显然，它可以是task，也可以是别的。
+    void *private;
+    wait_queue_func_t func;
+    struct list_head task_list;
+};
+```
+
+### epoll 惊群问题
+
+事件模型使程序阻塞在事件上而不是阻塞在事物上，也就是说内核仅仅通知**发生了某件事**，而具体发生了什么事，由处理的进程或线程自己 poll。这样事件模型就可以**一次搜索多个事件**，满足多路复用的需求。
 
