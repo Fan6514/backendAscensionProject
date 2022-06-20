@@ -26,9 +26,6 @@
 **3.2 进程管理**
 
 -   进程与线程管理
--   [Linux内核源码学习之进程管理](note/linux/Linux内核源码学习.md)
--   [多线程必备技能：条件变量与互斥锁](note/os/cond.md)
--   [高并发中的线程与线程库的实现](note/os/threadpool.md)
 
 **3.3 内存管理**
 
@@ -36,31 +33,17 @@
 
 **3.4 文件I/O系统**
 
--   [程序 I/O 操作详解](note/linux/io.md)
-
 ## 四、:rocket: 算法篇
 
 **4.1 初识算法**
 
--   [认识复杂度、对数器和异或运算](note/data_structure/base.md)
--   [认识二分法](note/data_structure/binary.md)
-
 **4.2 数据结构**
 
--   
-
 **4.3 排序算法**
-
--   [排序算法的实现](note/data_structure/sort.md)
--   字符串匹配算法：KMP
-
-常见算法思想：递归、枚举、递推、分治、贪心、动态规划等
 
 ## 五、 :rocket:数据库篇
 
 **5.1 Redis 源码解析**
-
--   [Redis 使用基础](note/db/redis_base.md)
 
 索引存储结构：B树、B+树索引、Hash索引
 
@@ -77,8 +60,6 @@ MySQL InnoDB MVCC 实现机制
 ## 六、:rocket: 系统设计架构篇
 
 **6.1 基础架构模式**
-
--   [常用的十种软件架构模式](note/system_design/sys_design_structure.md)
 
 ## 七、:rocket: 虚拟化与云计算篇
 
