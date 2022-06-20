@@ -3,54 +3,25 @@
 
 这里分享一些看过的文章并且总结起来，让平时碎片化学习的知识体系化，以便之后可以反复学习。
 
-## 一、:fire: 语言基础篇
+## 一、 :rocket:语言基础篇
 
-**1.1 指针与内存**
 
--   [指针使用必知必会](note/c_cpp/pointer.md)
--   [预处理器使用指南](note/c_cpp/include.md)
--   [深入理解链接器](note/c_cpp/linker.md)
--   [什么是内存](note/c_cpp/memory.md)
 
-**1.2 编程规范**
-
--   [结构体内存的自然对齐](note/c_cpp/struct_memory.md)
-
-**1.3 面向对象编程**
-
--   [多线程下的析构函数](note/c_cpp/destructor.md)
-
-## 二、:fire:  网络编程篇
+## 二、 :rocket: 网络编程篇
 
 **2.1 计算机网络基础**
 
 **2.2 网络编程模型**
 
--   进程间通信方式
-
--   多线程编程
-
--   五大 IO 模型
-
--   高性能 IO 两种模式：Reactor 和 Proactor
-
--   [IO 多路复用机制](note/net/epoll.md)
-
 **2.3 项目实践**
 
--   [:bulb:http服务器项目](https://github.com/Fan6514/httpServer4c)
+-   :fire: ​[http服务器项目](https://github.com/Fan6514/httpServer4c)
 
--   网络库（one loop per thread + thread pool 模式）
+## 三、 :rocket:操作系统篇
 
--   RPC
+**3.1 计算机系统的组成**
 
--   网络聊天室
-
-## 三、:fire: 操作系统篇
-
-**3.1 系统启动**
-
--   [系统上电启动](note/os/boost.md)
+-   [计算机系统硬件结构](note/os/计算机系统硬件.md)
 
 **3.2 进程管理**
 
@@ -67,7 +38,7 @@
 
 -   [程序 I/O 操作详解](note/linux/io.md)
 
-## 四、:fire: 算法篇
+## 四、:rocket: 算法篇
 
 **4.1 初识算法**
 
@@ -76,8 +47,7 @@
 
 **4.2 数据结构**
 
--   [基本数据结构：链表](note/data_structure/list.md)
--   [栈与队列](note/data_structure/stack_queue.md)
+-   
 
 **4.3 排序算法**
 
@@ -86,7 +56,11 @@
 
 常见算法思想：递归、枚举、递推、分治、贪心、动态规划等
 
-## 五、:fire: 数据库篇
+## 五、 :rocket:数据库篇
+
+**5.1 Redis 源码解析**
+
+-   [Redis 使用基础](note/db/redis_base.md)
 
 索引存储结构：B树、B+树索引、Hash索引
 
@@ -100,15 +74,15 @@ MySQL InnoDB MVCC 实现机制
 
 事务：ACID理论
 
-## 六、:fire: 系统设计架构篇
+## 六、:rocket: 系统设计架构篇
 
 **6.1 基础架构模式**
 
 -   [常用的十种软件架构模式](note/system_design/sys_design_structure.md)
 
-## 七、:fire: 虚拟化与云计算篇
+## 七、:rocket: 虚拟化与云计算篇
 
-## 八、:fire: 人工智能篇
+## 八、 :rocket:人工智能篇
 
-## 九、:fire: 项目相关技能篇
+## 九、 :rocket:项目相关技能篇
 
