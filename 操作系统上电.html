@@ -1,0 +1,141 @@
+<!doctype html>
+<html>
+<head>
+<meta charset='UTF-8'><meta name='viewport' content='width=device-width initial-scale=1'>
+<title>操作系统上电</title>
+</head>
+<body><h2 id='操作系统上电过程'>操作系统上电过程</h2>
+<p>从打开电源到操作系统启动是一个复杂的过程，在刚上电的时候，x86 PC 刚开机时 CPU 处于实模式，此时 CS=0xFFFF；IP=0x0000 执行BIOS（基本输入输出系统，地址 0xFFFF0）。BIOS 会将硬盘中<strong>启动区的 512 字节数据</strong>复制到<strong>内存中 0x7c00</strong> 的位置。</p>
+<blockquote><p>实模式的寻址方式：CS:IP = CS &lt;&lt; 4 + IP（CS左移4位+IP），和保护模式不同。</p>
+</blockquote>
+<p>开机程序刷入到 ROM 芯片中，计算机上电后第一件事就是读取它，芯片中的程序称为“基本输入输出系统 BIOS”。</p>
+<p><strong>1. 硬件自检</strong></p>
+<p>B IOS 程序首先检查计算机是否满足运行的基本条件，检查 RAM，键盘，显示器，软硬磁盘等，叫做“硬件自检”。如果硬件出现问题，主板会发出不同的蜂鸣，启动终止。如果没有问题，屏幕会显示 CPU、内存、硬盘等信息。</p>
+<p><strong>2. 启动顺序</strong></p>
+<p>完成硬件自检后，BIOS 将控制权交给下一阶段的启动顺序。此时，BIOS 将控制权交给“设定启动顺序”的第一个存储设备。</p>
+<p><strong>3. 主引导记录</strong></p>
+<p>计算机读取磁盘中最前面 0 磁道 0 扇区的 512 个字节读入内存中的 0x7c00 处，并设置 CS=0x07c0；IP=0x0000。如果这 512 字节中的最后两个字节是 0x55 和 0xAA，表明该设备可以用于启动，这块内存叫做“主引导记录MBR”。</p>
+<p>主引导记录的作用就是告诉计算机到哪个位置去找操作系统。</p>
+<h3 id='第一阶段boot'>第一阶段：BOOT</h3>
+<hr />
+<p>在 Linux 0.11 代码中，最开始的代码是用汇编语言写的 boot/bootsect.s，将该文件编译成二进制文件后，存放在启动区的第一扇区，之后由 BIOS 搬运到内存中的 0x7c00 位置，而 CPU 会在这个位置开始执行。</p>
+<blockquote><p>cs 是代码段寄存器，就是执行代码时候存放的基地址，ip 是指令指针寄存器，指向具体的某条指令。ds 是数据段寄存器，访问数据时的基地址。ss 是栈段寄存器，访问栈时的基地址，sp 是堆栈寄存器，存放栈的偏移地址。</p>
+</blockquote>
+<p>CPU 开始执行后，首先就是将 0x7c00 位置开始的 512 字节（主引导记录，也就是bootsect.s编译后的二进制指令）复制到 0x90000 的位置，并且设置 CS=0x9000；IP=go 的位置执行后面的指令。</p>
+<pre><code class='language-assembly' lang='assembly'>start:
+    mov	ax,#0x07c0
+    mov	ds,ax			// ds = 0x07c0
+    mov	ax,#0x9000
+    mov	es,ax			// es = 0x9000
+    mov	cx,#256
+    sub	si,si			// si = 0
+    sub	di,di			// di = 0
+    rep					// rep 指令表示重复执行 cx 寄存器中的次数，此时为256次
+    movw                 // movw 指令表示将 ds:si 复制一个字（WORD 16位）到 es:di 的位置
+    jmpi    go,INITSEG   // 段间跳转指令，跳转到 0x9000:go 处执行
+</code></pre>
+<p>CPU 从 go 标签位置开始执行后，由于代码被复制到 0x90000 位置，因此先将数据段寄存器 ds 和扩展段寄存器 es 和栈段寄存器 ss 的值设置为 0x9000。这里主要的工作就是设置栈的位置，栈是由栈段寄存器 ss 和栈基址寄存器 sp 共同表示栈顶地址。此时 <strong>sp = 0xFF00</strong> 表示目前的栈顶地址 ss:sp = 0x9FF00。</p>
+<pre><code class='language-assembly' lang='assembly'>go:	mov	ax,cs			// cs = 0x9000
+    mov	ds,ax
+    mov	es,ax
+! put stack at 0x9ff00.
+    mov	ss,ax
+    mov	sp,#0xFF00		! arbitrary value &gt;&gt;512
+</code></pre>
+<p>至此，操作系统完成了一下内存分配的基础工作，就是将访问代码和数据设置了一个基址，将栈顶指针指向一个远离代码位置的地方。</p>
+<p>接下来，就是设置好中断参数，调用中断将磁盘的第 2 个扇区开始的 4 个扇区的数据（setup.s 编译的 setup 二进制指令）加载到内存 0x90200 的位置。如果加载成功，就跳转到 ok_load_setup 标签位置；如果加载失败，则会重复执行这段代码。</p>
+<pre><code class='language-assembly' lang='assembly'>load_setup:
+    mov	dx,#0x0000		! drive 0, head 0 dh=磁头号 dl=驱动器号
+    mov	cx,#0x0002		! sector 2, track 0 ch=柱面号 cl=开始扇区 从第二个扇区开始读
+    mov	bx,#0x0200		! address = 512, in INITSEG	es:bs=内存地址 0x90200
+    mov	ax,#0x0200+SETUPLEN	! service 2, nr of sectors	ah=0x0200读磁盘 al=4扇区数量
+    int	0x13			! read it 指令是执行中断 0x13是BIOS读磁盘扇区的中断
+    jnc	ok_load_setup		! ok - continue
+    mov	dx,#0x0000
+    mov	ax,#0x0000		! reset the diskette
+    int	0x13
+    j	load_setup
+</code></pre>
+<p>加载成功后，除了向屏幕打印一些内容外，主要就是将硬盘第 6 扇区开始的 240 个扇区数据（剩余代码以 head.s 作为开头编译成 system 的二进制指令）加载到内存 0x10000 的位置，其原理与从磁盘加载 setup 相同。</p>
+<p>到此为止，操作系统的所有代码都会从硬盘搬运到内存中，然后跳转到 setup 开始执行。</p>
+<pre><code class='language-assembly' lang='assembly'>jmpi	0,SETUPSEG		// SETUPSEG=0x9020
+</code></pre>
+<h3 id='第二阶段setup'>第二阶段：setup</h3>
+<hr />
+<p>在 bootsect 中，操作系统完成了从硬盘到内存的加载。接下来的 setup 主要就是初始化一些硬件信息，存储在内存的特定位置中，方便以后操作系统获取使用。</p>
+<p>setup 中的指令从内存中的 0x90200 位置开始执行。</p>
+<pre><code class='language-assembly' lang='assembly'>start:
+
+! ok, the read went well so we get current cursor position and save it for
+! posterity.
+// 这里的主要工作就是初始化一些硬件信息，存在特定位置的内存中，方便以后使用
+
+	mov	ax,#INITSEG	! this is done in bootsect already, but...
+	mov	ds,ax
+	mov	ah,#0x03	! read cursor pos
+	xor	bh,bh
+	int	0x10		! save it in known place, con_init fetches
+	mov	[0],dx		! it from 0x90000. 0x90000 存放光标位置，初始化控制台使用
+</code></pre>
+<blockquote><p>int 0x10 触发 BIOS 提供的<strong>显示服务</strong>中断处理程序，ah 寄存器赋值 0x13 表示服务具体的<strong>读光标位置功能</strong>。</p>
+</blockquote>
+<p>中断程序执行完成后，dx 寄存器里的值表示光标位置，dh 存储行号，dl 存储列号。然后将 dx 寄存器里的值存储在 [0] 的内存地址，即 0x90000 处。</p>
+<p>接下来的代码中完成了类似的工作，在后面的 C 语言中，我们直接访问内存来获取变量的值。</p>
+<figure><table>
+<thead>
+<tr><th>内存地址</th><th>长度(字节)</th><th>名称</th></tr></thead>
+<tbody><tr><td>0x90000</td><td>2</td><td>光标位置</td></tr><tr><td>0x90002</td><td>2</td><td>扩展内存数</td></tr><tr><td>0x90004</td><td>2</td><td>显示页面</td></tr><tr><td>0x90006</td><td>1</td><td>显示模式</td></tr><tr><td>0x90007</td><td>1</td><td>字符列数</td></tr><tr><td>0x90008</td><td>2</td><td>未知</td></tr><tr><td>0x9000A</td><td>1</td><td>显示内存</td></tr><tr><td>0x9000B</td><td>1</td><td>显示状态</td></tr><tr><td>0x9000C</td><td>2</td><td>显卡特性参数</td></tr><tr><td>0x9000E</td><td>1</td><td>屏幕行数</td></tr><tr><td>0x9000F</td><td>1</td><td>屏幕列数</td></tr><tr><td>0x90080</td><td>16</td><td>硬盘1参数表</td></tr><tr><td>0x90090</td><td>16</td><td>硬盘2参数表</td></tr><tr><td>0x901FC</td><td>2</td><td>根设备号</td></tr></tbody>
+</table></figure>
+<p>当这些信息存储到内存后，操作系统有执行了关闭中断的操作。</p>
+<pre><code class='language-assembly' lang='assembly'>is_disk1:
+
+! now we want to move to protected mode ...
+
+	cli			! no interrupts allowed ! 关闭中断，后面要把BIOS的中断向量表覆盖，因此不能有中断进来
+</code></pre>
+<p>接下来，setup 会将操作系统的代码从 0x10000 移动到内存最开始的 0x00000 位置。</p>
+<pre><code class='language-assembly' lang='assembly'>! first we move the system to it&#39;s rightful place
+
+	mov	ax,#0x0000
+	cld			! &#39;direction&#39;=0, movs moves forward
+do_move:
+	mov	es,ax		! destination segment
+	add	ax,#0x1000
+	cmp	ax,#0x9000
+	jz	end_move
+	mov	ds,ax		! source segment
+	sub	di,di
+	sub	si,si
+	mov 	cx,#0x8000
+	rep				// 将整个操作系统代码 system 模块移动到 0x00000 位置
+	movsw
+	jmp	do_move
+</code></pre>
+<p>当整理完内存之后，现在的内存布局就变成了下面这样。</p>
+<p><img src="https://mmbiz.qpic.cn/mmbiz_png/GLeh42uInXQHOJn5OXTk8OUI2yxGIDtGZyYOKz12EMoLiboMiamhmkjECbOiaGmZSxFcsxicjmEoCeeKaKCodeHrVw/640?wx_fmt=png&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1" referrerpolicy="no-referrer" alt="图片"></p>
+<p>接下来，操作系统会完成一个重要的操作，就是<strong>模式的转换</strong>，需要从 16 位的 <strong>实模式</strong> 转换为 32 位的 <strong>保护模式</strong>。</p>
+<pre><code class='language-assembly' lang='assembly'>mov	ax,#0x0001	! protected mode (PE) bit
+lmsw	ax		! This is it! cr0寄存器最后一位为0是实模式，为1是保护模式
+jmpi	0,8		! jmp offset 0 of segment 8 (cs) 进入保护模式，寻址方式发生变化
+				// 实模式下计算机寻址最大空间为1M（16位机），保护模式下寻址空间为4G（32位）
+				// 保护模式 CS=8 存储的是 GDT 的地址，该地址存储了内存地址的基址
+</code></pre>
+<p>实模式下 CPU 计算物理地址的方式是段基址左移四位加偏移地址，而段寄存器存储的<strong>段基址</strong>为 16 位，偏移后能访问的地址范围最大为 2^20=1M 显然是不够的。在<strong>保护模式</strong>下，段寄存器里的值称为 <strong>段选择子</strong>，其中存储着段描述符的索引。根据索引在<strong>全局描述符表GDT</strong>中找到段描述符，而段描述符中存储着段基址。</p>
+<p><img src="https://mmbiz.qpic.cn/mmbiz_png/GLeh42uInXRvb1zDVW17W3KsMIzHI1lATicvoUOED4kVopkpEzoqTGbaJuMJibyC2poicIbIXHc1WLRpM0YLy69CA/640?wx_fmt=png&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1" referrerpolicy="no-referrer" alt="图片"></p>
+<blockquote><p>GDT 存储在内存中，由操作系统将内存的位置信息存储在 gdtr 寄存器中。IDT 为中断描述符表，存储在 idtr 寄存器中。</p>
+</blockquote>
+<p>&nbsp;</p>
+<h3 id='总结'>总结</h3>
+<hr />
+<p>至此，操作系统汇编部分完成了内存的操作后将正式进入 c 语言编写的系统核心代码。总结从上电到进入main函数前，操作系统完成了如下操作：</p>
+<ol>
+<li>计算机上电后操作系统启动前，BIOS程序将硬盘启动区的512字节存储在内存的 0x7c000 处，并设置 CS=0x07c0，IP=0x0000；</li>
+<li>操作系统先将 0x7c000  的 512 字节复制到 0x900000，然后设置数据段寄存器 ds 和扩展段寄存器 es 和栈段寄存器 ss 的值设置为 0x9000；</li>
+<li>完成基础内存分配后，操作系统调用中断将磁盘的第 2 个扇区开始的 4 个扇区的数据（setup.s 编译的 setup 二进制指令）加载到内存 0x90200 的位置，将硬盘第 6 扇区开始的 240 个扇区数据（剩余代码以 head.s 作为开头编译成 system 的二进制指令）加载到内存 0x10000 的位置；</li>
+
+</ol>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+</body>
+</html>
